@@ -3,18 +3,21 @@ class ShapeManager{
   int x = 0;
   int [][]grid = BlockShapes.shape1;
   int [][]board;
+  int level;
   
   public ShapeManager(int [][]board){
     this.board = board;
   }
   
-  void moveDown(){
+  boolean moveDown(){
      if(checkCollision(x, y+1)){
        y++; 
+       return true;
      } else {
        resetShape(); 
        checkLines();
-
+       level+=1;
+       return false;
      }
   }
   
@@ -51,8 +54,8 @@ class ShapeManager{
         }
      }
      this.grid = BlockShapes.shapes[(int)random(0,4)];
-     this.y = -5;
-     this.x = 0;
+     this.y = -2;
+     this.x = (int)random(0,5);
   }
   
   void right(){

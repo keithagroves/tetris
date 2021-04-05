@@ -2,6 +2,7 @@ int COLS = 10;
 int ROWS = 20;
 ShapeManager shapeManager;
 int [][] board = new int[COLS][ROWS];
+
 void setup(){
  size(300,600);
  shapeManager = new ShapeManager(board);
@@ -9,7 +10,7 @@ void setup(){
 
 void draw(){
    background(255);
-  if(frameCount%100==0)
+  if(frameCount%(100-Math.max(shapeManager.level, 1))==0)
     shapeManager.moveDown();
   drawBackground();
   shapeManager.drawBlock();
@@ -41,7 +42,6 @@ void drawBackground(){
       else if(board[x][y] ==7){
             fill(0,200,255);
          }
-     
        else{
         noFill(); 
        }
@@ -58,10 +58,13 @@ void keyPressed(){
    if(keyCode == LEFT){
       shapeManager.left(); 
    }
-   if(keyCode == ' '){
+   if(keyCode == UP){
        shapeManager.rotate();
    }
    if(keyCode == DOWN){
       shapeManager.moveDown(); 
+   }
+   if(keyCode == ' '){
+       while(shapeManager.moveDown()){}; 
    }
 }
