@@ -1,14 +1,21 @@
 class ShapeManager{
   int y = 0;
   int x = 0;
+  byte id  = 0;
   int [][]grid = BlockShapes.getRandomShape();
   byte [][]board;
   int level;
   
-  public ShapeManager(byte [][]board){
+  public ShapeManager(byte [][]board, byte id){
+    this.board = board;
+    this.id = id;
+  }
+   public ShapeManager(byte [][]board){
     this.board = board;
   }
-  
+  void setId(byte id){
+    this.id = id;
+  }
   boolean moveDown(){
      if(checkCollision(x, y+1)){
        y++; 
@@ -175,7 +182,7 @@ class ShapeManager{
              rect((col+x)*(width/COLS), (row+y)*(height/ROWS),width/COLS, height/ROWS); 
            }
             else {
-             rect((col+x)*(width/COLS)+width, (row+y)*(height/ROWS),width/COLS, height/ROWS); 
+             rect((col+x)*(width/COLS)+width + Constants.GAP, (row+y)*(height/ROWS),width/COLS, height/ROWS); 
            }  
      }
       }

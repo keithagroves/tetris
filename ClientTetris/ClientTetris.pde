@@ -5,20 +5,22 @@ byte [][] board = new byte[COLS][ROWS];
 byte [][] enemyBoard = new byte[COLS][ROWS];
 Client myClient; 
 int level = 0;
-
+byte id = (byte)random(0,100);
+public static final byte ID_MESSAGE = -99;
 void setup() {
-  size(600, 600);
+  size(610, 600);
   width/=2;
   myClient = new Client(this, "localhost", 5204);
+  byte [] idMessage = {ID_MESSAGE, this.id}; 
+  myClient.write(idMessage);
 }
 
 void draw() {
-  background(255);
-   background(0);
+  background(0);
   drawPlayerScreen(board, true);
   drawPlayerScreen(enemyBoard, false);
   fill(255);
-  rect(width, 0, 10, height);
+  rect(width, 0, Constants.GAP, height);
 }
 
 
@@ -49,7 +51,7 @@ void drawPlayerScreen(byte [][] b, boolean self) {
       if (self) {
         rect(x*(width/COLS), y*(height/ROWS), width/COLS, height/ROWS);
       } else {
-        rect(x*(width/COLS)+width, y*(height/ROWS), width/COLS, height/ROWS);
+        rect(x*(width/COLS)+width+Constants.GAP, y*(height/ROWS), width/COLS, height/ROWS);
       }
     }
   }
@@ -75,11 +77,15 @@ void keyPressed() {
 
 void clientEvent(Client someClient) {
   byte [] data = someClient.readBytes();
+  if(data.length < COLS*ROWS+1){
   byte id = data[data.length-1];
-  if (id == 99) {
+  if (id == this.id) {
     updateData(this.board, data);
-  } else if(id ==0) {
+  } else if(id == 55) {
     updateData(this.enemyBoard, data);
+  }
+  } else{
+    someClient.clear();
   }
 
 }
