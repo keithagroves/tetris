@@ -77,18 +77,18 @@ void clientEvent(Client someClient) {
   byte [] data = someClient.readBytes();
   byte id = data[data.length-1];
   if (id == 99) {
-    for (int i = 0; i < board.length; i++) {
-      for (int j = 0; j < board[i].length; j++) { 
-        if (i + (j * board.length) < data.length)
-          this.board[i][j]= data[i + (j * board.length)];
-      }
-    }
+    updateData(this.board, data);
   } else if(id ==0) {
-    for (int i = 0; i < enemyBoard.length; i++) {
-      for (int j = 0; j < enemyBoard[i].length; j++) { 
-        if (i + (j * enemyBoard.length) < data.length)
-          this.enemyBoard[i][j]= data[i + (j * enemyBoard.length)];
+    updateData(this.enemyBoard, data);
+  }
+
+}
+
+void updateData(byte [][] b, byte [] data){
+  for (int i = 0; i < b.length; i++) {
+      for (int j = 0; j < b[i].length; j++) { 
+        if (i + (j * b.length) < data.length)
+          b[i][j]= data[i + (j * enemyBoard.length)];
       }
     }
-  }
 }
