@@ -7,7 +7,7 @@ ShapeManager shapeManager;
 ShapeManager shapeManager2;
 
 byte [][] board = new byte[COLS][ROWS];
-byte [][] enemyBoard = new byte[COLS][ROWS];
+byte [][] serverBoard = new byte[COLS][ROWS];
 byte id = (byte)random(0, 10000);
 Server myServer;
 public static final byte ID_MESSAGE = -99;
@@ -16,39 +16,47 @@ void setup() {
   size(610, 600);
   width = width/2;
   shapeManager = new ShapeManager(board, id);
-  shapeManager2 = new ShapeManager(enemyBoard, id);
+  shapeManager2 = new ShapeManager(serverBoard, id);
   myServer = new Server(this, 5204);
 }
 
 void draw() {
   background(255);
   if (frameCount%(100-Math.min(shapeManager2.level, 99))==0) {
-    shapeManager2.moveDown();
-    shapeManager.moveDown();
-    myServer.write(output(enemyBoard, true));
-    myServer.write(output(board, false));
+    gameStep();
   }
+  talkToClient();  
+  background(0);
+  drawPlayerScreen(board, false);
+  drawPlayerScreen(serverBoard, true);
+  shapeManager.drawBlock(false);
+  shapeManager2.drawBlock(true);
+  fill(255);
+  rect(width, 0, 10, height);
+}
+
+void gameStep() {
+  shapeManager2.moveDown();
+  shapeManager.moveDown();
+  myServer.write(output(serverBoard, true));
+  myServer.write(output(board, false));
+}
+
+void talkToClient() {
   Client thisClient = myServer.available();
   if (thisClient !=null) {
     if (thisClient.active()) {
-      if(shapeManager.id == 0){
-         byte [] idMessage = thisClient.readBytes();
-         if(idMessage[0] == ID_MESSAGE){
-           shapeManager.id =  idMessage[idMessage.length-1];
-           println("id"+shapeManager.id);
-         }
+      if (shapeManager.id == 0) {
+        byte [] idMessage = thisClient.readBytes();
+        if (idMessage[0] == ID_MESSAGE) {
+          shapeManager.id =  idMessage[idMessage.length-1];
+          println("id"+shapeManager.id);
+        }
       }
       keyPress(thisClient.read());
       myServer.write(output(board, false));
     }
   }
-  background(0);
-  drawPlayerScreen(board, false);
-  drawPlayerScreen(enemyBoard, true);
-  shapeManager.drawBlock(false);
-  shapeManager2.drawBlock(true);
-  fill(255);
-  rect(width, 0, 10, height);
 }
 
 void drawPlayerScreen(byte [][] board, boolean self) {
@@ -117,7 +125,7 @@ void keyPressed() {
     while (shapeManager2.moveDown()) {
     };
   }
-  myServer.write(output(enemyBoard, true));
+  myServer.write(output(serverBoard, true));
 }
 
 // ServerEvent message is generated when a new client connects 
@@ -125,13 +133,13 @@ void keyPressed() {
 void serverEvent(Server someServer, Client someClient) {
   println("client connected "+someClient.ip());
   shapeManager = new ShapeManager(board);
-  shapeManager2 = new ShapeManager(enemyBoard, (byte)55);
+  shapeManager2 = new ShapeManager(serverBoard, (byte)55);
 }
 
 public byte[] output(byte[][] input, boolean self) {
   if (self) {
     return serialize( shapeManager2, input);
-} else {
+  } else {
     return serialize( shapeManager, input);
   }
 }

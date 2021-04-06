@@ -2,7 +2,7 @@ import processing.net.*;
 int COLS = 10;
 int ROWS = 20;
 byte [][] board = new byte[COLS][ROWS];
-byte [][] enemyBoard = new byte[COLS][ROWS];
+byte [][] serverBoard = new byte[COLS][ROWS];
 Client myClient; 
 int level = 0;
 byte id = (byte)random(0,100);
@@ -18,7 +18,7 @@ void setup() {
 void draw() {
   background(0);
   drawPlayerScreen(board, true);
-  drawPlayerScreen(enemyBoard, false);
+  drawPlayerScreen(serverBoard, false);
   fill(255);
   rect(width, 0, Constants.GAP, height);
 }
@@ -77,12 +77,12 @@ void keyPressed() {
 
 void clientEvent(Client someClient) {
   byte [] data = someClient.readBytes();
-  if(data.length < COLS*ROWS+1){
+  if(data.length <= COLS*ROWS+1){
   byte id = data[data.length-1];
   if (id == this.id) {
     updateData(this.board, data);
   } else if(id == 55) {
-    updateData(this.enemyBoard, data);
+    updateData(this.serverBoard, data);
   }
   } else{
     someClient.clear();
@@ -94,7 +94,7 @@ void updateData(byte [][] b, byte [] data){
   for (int i = 0; i < b.length; i++) {
       for (int j = 0; j < b[i].length; j++) { 
         if (i + (j * b.length) < data.length)
-          b[i][j]= data[i + (j * enemyBoard.length)];
+          b[i][j]= data[i + (j * serverBoard.length)];
       }
     }
 }
