@@ -1,6 +1,7 @@
 import processing.net.*; 
 import java.util.Map;
   
+  //protocol [messagetype, id, data]
 public static final int COLS = 10;
 public static final int ROWS = 20;
 HashMap<Byte, ShapeManager> players = new HashMap<Byte, ShapeManager>();
@@ -9,8 +10,9 @@ boolean newClient;
 byte id = (byte)random(0, 10000);
 Server myServer;
 public static final byte ID_MESSAGE = -99;
-public static final byte CONTROL_MESSAGE = -99;
-
+public static final byte CONTROL_MESSAGE = -95;
+public static final byte NAME_MESSAGE = -98;
+public static final byte BOARD_UPDATE_MESSAGE = -97;
 int level = 0; 
 void setup() {
   size(610, 600);
@@ -20,18 +22,20 @@ void setup() {
 }
 
 void draw() {
-  background(255);
   if (frameCount%(100-Math.min(level, 99))==0) {
     gameStep();
   }
   talkToClient();  
   background(0);
+  
   //drawPlayerScreen(board, false);
   ///drawPlayerScreen(serverBoard, true);
   //shapeManager.drawBlock(false);
   //shapeManager2.drawBlock(true);
   for(ShapeManager sm: players.values()){
       drawPlayerScreen(sm.board, false);
+      fill(255);
+      text(sm.name,10,10);
   }
   
   fill(255);
@@ -52,10 +56,11 @@ void talkToClient() {
   if (thisClient !=null) {
     if (thisClient.active() ) {
         byte [] message = thisClient.readBytes();
-        if(players.get(message[0]) != null){
-          println(players.get(message[0]));
-          keyPress(message[1], message[0]);
-          myServer.write(output(players.get(message[0]).board, message[0]));
+        if(message[0] == NAME_MESSAGE){
+          handleNameMessage(message);
+        }
+        else if(message[0] == CONTROL_MESSAGE){
+           handleControlMessage(message);
         } else{
            println("player" + message[0]+" does not exist"); 
         }
@@ -63,7 +68,19 @@ void talkToClient() {
       
     }
   }
-
+void handleNameMessage(byte[] message){
+  if(players.get(message[1]) != null){
+              players.get(message[1]).name =  new String(message).substring(2);
+              //inform all clients
+              myServer.write(message);
+          }
+}
+void handleControlMessage(byte[] message){
+    byte playerId = message[1];
+    byte controlKey = message[2];
+    keyPress(playerId, controlKey);
+    myServer.write(output(players.get(playerId).board, playerId));
+}
 
 void drawPlayerScreen(byte [][] board, boolean self) {
 
@@ -95,7 +112,7 @@ void drawPlayerScreen(byte [][] board, boolean self) {
   }
 }
 
-void keyPress(int keyCod, byte id) {
+void keyPress(byte id, int keyCod) {
   ShapeManager sm = players.get(id);
   if (keyCod == RIGHT) {
     sm.right();
@@ -126,6 +143,9 @@ void serverEvent(Server someServer, Client someClient) {
   players.put((byte)playerId, new ShapeManager(playerId));
   
   someClient.write(new byte[]{ID_MESSAGE, playerId});
+  for(ShapeManager sm :players.values()){
+     //update client on all other players. 
+  }
 }
 
 public byte[] output(byte[][] input, byte id) {
@@ -151,12 +171,13 @@ byte[] serialize( ShapeManager sm, byte[][] input) {
     }
   }
 
-  byte[] out = new byte[tempGrid.length * tempGrid[0].length + 1];
+  byte[] out = new byte[tempGrid.length * tempGrid[0].length + 2];
   for (int i = 0; i < tempGrid.length; i++) {
     for (int j = 0; j < tempGrid[i].length; j++) { 
-      out[i + (j * tempGrid.length)] = tempGrid[i][j];
+      out[i + (j * tempGrid.length) +2] = tempGrid[i][j];
     }
   }
-  out[out.length-1] = sm.id;
+  out[0] = BOARD_UPDATE_MESSAGE;
+  out[1] = sm.id;
   return out;
 }

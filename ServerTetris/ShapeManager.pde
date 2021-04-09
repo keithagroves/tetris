@@ -4,6 +4,7 @@ class ShapeManager{
   byte id  = 0;
   int [][]grid = BlockShapes.getRandomShape();
   byte [][] board = new byte[COLS][ROWS];
+  String name = "NoName";
   int level;
   
   public ShapeManager(byte [][]board, byte id){

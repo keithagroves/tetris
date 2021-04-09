@@ -1,13 +1,21 @@
 import processing.net.*; 
+import javax.swing.*;
 int COLS = 10;
 int ROWS = 20;
 byte [][] board = new byte[COLS][ROWS];
 byte [][] serverBoard = new byte[COLS][ROWS];
 Client myClient; 
+String name ="";
+String serverName = "";
 int level = 0;
 byte id = 0;
+
 public static final byte ID_MESSAGE = -99;
-public static final byte CONTROL_MESSAGE = -100;
+public static final byte NAME_MESSAGE = -98;
+
+public static final byte CONTROL_MESSAGE = -95;
+public static final byte BOARD_UPDATE_MESSAGE = -97;
+public static final byte BROADCAST = -100;
 
 
 void setup() {
@@ -28,7 +36,7 @@ void draw() {
 
 
 void drawPlayerScreen(byte [][] b, boolean self) {
- 
+
   for (int y = 0; y < ROWS; y++) {
     for (int x = 0; x < COLS; x++) {
 
@@ -56,52 +64,74 @@ void drawPlayerScreen(byte [][] b, boolean self) {
       }
     }
   }
+  text(name, 20, 20);
+  text(serverName, 100, 20);
 }
 
 void keyPressed() {
   if (keyCode == RIGHT) {
-    myClient.write(new byte[]{this.id, (byte)RIGHT});
+    myClient.write(new byte[]{CONTROL_MESSAGE,this.id, (byte)RIGHT});
   }
   if (keyCode == LEFT) {
-    myClient.write(new byte[]{this.id, (byte)LEFT});
+    myClient.write(new byte[]{CONTROL_MESSAGE, this.id, (byte)LEFT});
   }
   if (keyCode == UP) {
-    myClient.write(new byte[]{this.id, (byte)UP});
+    myClient.write(new byte[]{CONTROL_MESSAGE, this.id, (byte)UP});
   }
   if (keyCode == DOWN) {
-    myClient.write(new byte[]{this.id, (byte)DOWN});
+    myClient.write(new byte[]{CONTROL_MESSAGE, this.id, (byte)DOWN});
   }
   if (keyCode == ' ') {
-    myClient.write(new byte[]{this.id, (byte)' '});
+    myClient.write(new byte[]{CONTROL_MESSAGE,this.id, (byte)' '});
   }
 }
 
 void clientEvent(Client someClient) {
- 
+
   byte [] data = someClient.readBytes();
-  if(this.id == 0 && data[0] == ID_MESSAGE){
-      this.id = data[1];
-      println(this.id);
-   }
-  println(data.length);
-  if(data.length <= COLS*ROWS+1){
-  byte id = data[data.length-1];
-  if (id == this.id) {
-    updateData(this.board, data);
-  } else {
-    updateData(this.serverBoard, data);
+  if (data[0] == NAME_MESSAGE) {
+    if (this.id != data[1]) {
+      if(this.serverName == null){
+      this.serverName = new String(data).substring(2);
+       byte[] nameMessage = name.getBytes();
+    nameMessage[0] = NAME_MESSAGE;
+    nameMessage[1] = this.id;
+    this.name = new String(nameMessage).substring(2);
+    someClient.write(nameMessage);
+      }  
+    }
   }
-  } else{
+  if (this.id == 0 && data[0] == ID_MESSAGE) {
+    this.id = data[1];
+    println(this.id);
+    name = "  "+JOptionPane.showInputDialog("successfully joined game! Please enter your name");
+    byte[] nameMessage = name.getBytes();
+    nameMessage[0] = NAME_MESSAGE;
+    nameMessage[1] = this.id;
+    this.name = new String(nameMessage).substring(2);
+    someClient.write(nameMessage);
+  }
+  if(data[0] == BOARD_UPDATE_MESSAGE){
+
+  println(data.length);
+  if (data.length <= COLS*ROWS+2) {
+    byte id = data[1];
+    if (id == this.id) {
+      updateData(this.board, data);
+    } else {
+      updateData(this.serverBoard, data);
+    }
+  } else {
     someClient.clear();
   }
-
+  }
 }
 
-void updateData(byte [][] b, byte [] data){
+void updateData(byte [][] b, byte [] data) {
   for (int i = 0; i < b.length; i++) {
-      for (int j = 0; j < b[i].length; j++) { 
-        if (i + (j * b.length) < data.length)
-          b[i][j]= data[i + (j * serverBoard.length)];
-      }
+    for (int j = 0; j < b[i].length; j++) { 
+      if (i + (j * b.length) < data.length)
+        b[i][j]= data[i + (j * serverBoard.length)+2];
     }
+  }
 }
