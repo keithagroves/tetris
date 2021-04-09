@@ -3,7 +3,7 @@ class ShapeManager{
   int x = 0;
   byte id  = 0;
   int [][]grid = BlockShapes.getRandomShape();
-  byte [][]board;
+  byte [][] board = new byte[COLS][ROWS];
   int level;
   
   public ShapeManager(byte [][]board, byte id){
@@ -13,6 +13,10 @@ class ShapeManager{
    public ShapeManager(byte [][]board){
     this.board = board;
   }
+   public ShapeManager(byte playerId){
+    this.id = playerId;
+  }
+
   void setId(byte id){
     this.id = id;
   }

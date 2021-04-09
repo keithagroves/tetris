@@ -1,63 +1,69 @@
 import processing.net.*; 
-int COLS = 10;
-int ROWS = 20;
+import java.util.Map;
+  
+public static final int COLS = 10;
+public static final int ROWS = 20;
+HashMap<Byte, ShapeManager> players = new HashMap<Byte, ShapeManager>();
 
-
-ShapeManager shapeManager;
-ShapeManager shapeManager2;
-
-byte [][] board = new byte[COLS][ROWS];
-byte [][] serverBoard = new byte[COLS][ROWS];
+boolean newClient;
 byte id = (byte)random(0, 10000);
 Server myServer;
 public static final byte ID_MESSAGE = -99;
+public static final byte CONTROL_MESSAGE = -99;
 
+int level = 0; 
 void setup() {
   size(610, 600);
   width = width/2;
-  shapeManager = new ShapeManager(board, id);
-  shapeManager2 = new ShapeManager(serverBoard, id);
+
   myServer = new Server(this, 5204);
 }
 
 void draw() {
   background(255);
-  if (frameCount%(100-Math.min(shapeManager2.level, 99))==0) {
+  if (frameCount%(100-Math.min(level, 99))==0) {
     gameStep();
   }
   talkToClient();  
   background(0);
-  drawPlayerScreen(board, false);
-  drawPlayerScreen(serverBoard, true);
-  shapeManager.drawBlock(false);
-  shapeManager2.drawBlock(true);
+  //drawPlayerScreen(board, false);
+  ///drawPlayerScreen(serverBoard, true);
+  //shapeManager.drawBlock(false);
+  //shapeManager2.drawBlock(true);
+  for(ShapeManager sm: players.values()){
+      drawPlayerScreen(sm.board, false);
+  }
+  
   fill(255);
   rect(width, 0, 10, height);
 }
 
 void gameStep() {
-  shapeManager2.moveDown();
-  shapeManager.moveDown();
-  myServer.write(output(serverBoard, true));
-  myServer.write(output(board, false));
+  for(ShapeManager sm : players.values()){
+    sm.moveDown();
+    myServer.write(output(sm.board, sm.id));
+    
+  }
+
 }
 
 void talkToClient() {
   Client thisClient = myServer.available();
   if (thisClient !=null) {
-    if (thisClient.active()) {
-      if (shapeManager.id == 0) {
-        byte [] idMessage = thisClient.readBytes();
-        if (idMessage[0] == ID_MESSAGE) {
-          shapeManager.id =  idMessage[idMessage.length-1];
-          println("id"+shapeManager.id);
+    if (thisClient.active() ) {
+        byte [] message = thisClient.readBytes();
+        if(players.get(message[0]) != null){
+          println(players.get(message[0]));
+          keyPress(message[1], message[0]);
+          myServer.write(output(players.get(message[0]).board, message[0]));
+        } else{
+           println("player" + message[0]+" does not exist"); 
         }
-      }
-      keyPress(thisClient.read());
-      myServer.write(output(board, false));
+        }
+      
     }
   }
-}
+
 
 void drawPlayerScreen(byte [][] board, boolean self) {
 
@@ -89,59 +95,41 @@ void drawPlayerScreen(byte [][] board, boolean self) {
   }
 }
 
-void keyPress(int keyCod) {
+void keyPress(int keyCod, byte id) {
+  ShapeManager sm = players.get(id);
   if (keyCod == RIGHT) {
-    shapeManager.right();
+    sm.right();
   }
   if (keyCod == LEFT) {
-    shapeManager.left();
+    sm.left();
   }
   if (keyCod == UP) {
-    shapeManager.rotate();
+    sm.rotate();
   }
   if (keyCod == DOWN) {
-    shapeManager.moveDown();
+    sm.moveDown();
   }
   if (keyCod == ' ') {
-    while (shapeManager.moveDown()) {
+    while (sm.moveDown()) {
     };
   }
 }
 
-void keyPressed() {
-  if (keyCode == RIGHT) {
-    shapeManager2.right();
-  }
-  if (keyCode == LEFT) {
-    shapeManager2.left();
-  }
-  if (keyCode == UP) {
-    shapeManager2.rotate();
-  }
-  if (keyCode == DOWN) {
-    shapeManager2.moveDown();
-  }
-  if (keyCode == ' ') {
-    while (shapeManager2.moveDown()) {
-    };
-  }
-  myServer.write(output(serverBoard, true));
-}
+
 
 // ServerEvent message is generated when a new client connects 
 // to an existing server.
 void serverEvent(Server someServer, Client someClient) {
   println("client connected "+someClient.ip());
-  shapeManager = new ShapeManager(board);
-  shapeManager2 = new ShapeManager(serverBoard, (byte)55);
+  byte playerId = (byte)random(0,1000);
+  
+  players.put((byte)playerId, new ShapeManager(playerId));
+  
+  someClient.write(new byte[]{ID_MESSAGE, playerId});
 }
 
-public byte[] output(byte[][] input, boolean self) {
-  if (self) {
-    return serialize( shapeManager2, input);
-  } else {
-    return serialize( shapeManager, input);
-  }
+public byte[] output(byte[][] input, byte id) {
+    return serialize( players.get(id), input);
 }
 
 byte[] serialize( ShapeManager sm, byte[][] input) {

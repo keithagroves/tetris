@@ -5,14 +5,15 @@ byte [][] board = new byte[COLS][ROWS];
 byte [][] serverBoard = new byte[COLS][ROWS];
 Client myClient; 
 int level = 0;
-byte id = (byte)random(0,100);
+byte id = 0;
 public static final byte ID_MESSAGE = -99;
+public static final byte CONTROL_MESSAGE = -100;
+
+
 void setup() {
   size(610, 600);
   width/=2;
   myClient = new Client(this, "localhost", 5204);
-  byte [] idMessage = {ID_MESSAGE, this.id}; 
-  myClient.write(idMessage);
 }
 
 void draw() {
@@ -31,7 +32,7 @@ void drawPlayerScreen(byte [][] b, boolean self) {
   for (int y = 0; y < ROWS; y++) {
     for (int x = 0; x < COLS; x++) {
 
-      if (b[x][y] ==1) {
+      if (b[x][y] == 1) {
         fill(0, 200, 0);
       } else if (b[x][y] ==2) {
         fill(50, 200, 200);
@@ -59,29 +60,35 @@ void drawPlayerScreen(byte [][] b, boolean self) {
 
 void keyPressed() {
   if (keyCode == RIGHT) {
-    myClient.write(RIGHT);
+    myClient.write(new byte[]{this.id, (byte)RIGHT});
   }
   if (keyCode == LEFT) {
-    myClient.write(LEFT);
+    myClient.write(new byte[]{this.id, (byte)LEFT});
   }
   if (keyCode == UP) {
-    myClient.write(UP);
+    myClient.write(new byte[]{this.id, (byte)UP});
   }
   if (keyCode == DOWN) {
-    myClient.write(DOWN);
+    myClient.write(new byte[]{this.id, (byte)DOWN});
   }
   if (keyCode == ' ') {
-    myClient.write(' ');
+    myClient.write(new byte[]{this.id, (byte)' '});
   }
 }
 
 void clientEvent(Client someClient) {
+ 
   byte [] data = someClient.readBytes();
+  if(this.id == 0 && data[0] == ID_MESSAGE){
+      this.id = data[1];
+      println(this.id);
+   }
+  println(data.length);
   if(data.length <= COLS*ROWS+1){
   byte id = data[data.length-1];
   if (id == this.id) {
     updateData(this.board, data);
-  } else if(id == 55) {
+  } else {
     updateData(this.serverBoard, data);
   }
   } else{
