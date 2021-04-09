@@ -13,6 +13,7 @@ public static final byte ID_MESSAGE = -99;
 public static final byte CONTROL_MESSAGE = -95;
 public static final byte NAME_MESSAGE = -98;
 public static final byte BOARD_UPDATE_MESSAGE = -97;
+public static final byte BROADCAST = -100;
 int level = 0; 
 void setup() {
   size(610, 600);

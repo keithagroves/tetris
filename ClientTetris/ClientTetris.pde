@@ -6,7 +6,7 @@ byte [][] board = new byte[COLS][ROWS];
 byte [][] serverBoard = new byte[COLS][ROWS];
 Client myClient; 
 String name ="";
-String serverName = "";
+String serverName = null;
 int level = 0;
 byte id = 0;
 
@@ -21,7 +21,7 @@ public static final byte BROADCAST = -100;
 void setup() {
   size(610, 600);
   width/=2;
-  myClient = new Client(this, "localhost", 5204);
+  myClient = new Client(this, "localhost", 8080);
 }
 
 void draw() {
@@ -65,6 +65,7 @@ void drawPlayerScreen(byte [][] b, boolean self) {
     }
   }
   text(name, 20, 20);
+  if(serverName!=null)
   text(serverName, 100, 20);
 }
 
@@ -93,10 +94,9 @@ void clientEvent(Client someClient) {
     if (this.id != data[1]) {
       if(this.serverName == null){
       this.serverName = new String(data).substring(2);
-       byte[] nameMessage = name.getBytes();
+      byte[] nameMessage = ("  "+this.name).getBytes();
     nameMessage[0] = NAME_MESSAGE;
     nameMessage[1] = this.id;
-    this.name = new String(nameMessage).substring(2);
     someClient.write(nameMessage);
       }  
     }
