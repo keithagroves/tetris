@@ -21,7 +21,7 @@ public static final byte BROADCAST = -100;
 void setup() {
   size(610, 600);
   width/=2;
-  myClient = new Client(this, "localhost", 8080);
+  myClient = new Client(this, "13.56.229.131", 8080);
 }
 
 void draw() {
@@ -30,6 +30,7 @@ void draw() {
   drawPlayerScreen(serverBoard, false);
   fill(255);
   rect(width, 0, Constants.GAP, height);
+  textSize(30);
 }
 
 
@@ -64,7 +65,7 @@ void drawPlayerScreen(byte [][] b, boolean self) {
       }
     }
   }
-  textSize(20);
+  
   text(name, 20, 20);
   if(serverName!=null)
     text(serverName, width+ Constants.GAP+20, 20);
