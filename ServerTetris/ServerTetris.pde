@@ -23,8 +23,12 @@ void setup() {
 }
 
 void draw() {
-  if (frameCount%(100-Math.min(level, 99))==0) {
-    gameStep();
+  if (frameCount%(100-Math.min(level, 99))==0 ) {
+    if(players.size() >= 2){
+      gameStep();
+    } else{
+      text("waiting for player to connect", width, height/2);
+    }
   }
   talkToClient();  
   background(0);
@@ -138,6 +142,7 @@ void keyPress(byte id, int keyCod) {
 // ServerEvent message is generated when a new client connects 
 // to an existing server.
 void serverEvent(Server someServer, Client someClient) {
+  if(players.size() < 2){
   println("client connected "+someClient.ip());
   byte playerId = (byte)random(0,1000);
   
@@ -146,6 +151,7 @@ void serverEvent(Server someServer, Client someClient) {
   someClient.write(new byte[]{ID_MESSAGE, playerId});
   for(ShapeManager sm :players.values()){
      //update client on all other players. 
+  }
   }
 }
 
