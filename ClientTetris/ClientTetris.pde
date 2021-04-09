@@ -64,9 +64,10 @@ void drawPlayerScreen(byte [][] b, boolean self) {
       }
     }
   }
+  textSize(20);
   text(name, 20, 20);
   if(serverName!=null)
-  text(serverName, 100, 20);
+    text(serverName, width+ Constants.GAP+20, 20);
 }
 
 void keyPressed() {
