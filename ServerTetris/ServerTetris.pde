@@ -14,24 +14,24 @@ public static final byte CONTROL_MESSAGE = -95;
 public static final byte NAME_MESSAGE = -98;
 public static final byte BOARD_UPDATE_MESSAGE = -97;
 public static final byte BROADCAST = -100;
+public static final int PORT = 8080;
 int level = 0; 
 void setup() {
   size(610, 600);
   width = width/2;
-
-  myServer = new Server(this, 5204);
+  myServer = new Server(this, PORT);
 }
 
 void draw() {
+    background(0);
+
   if (frameCount%(100-Math.min(level, 99))==0 ) {
-    if(players.size() >= 2){
-      gameStep();
-    } else{
-      text("waiting for player to connect", width, height/2);
-    }
+     if(players.size() >= 2){
+       gameStep();
+     }
   }
-  talkToClient();  
-  background(0);
+
+    talkToClient();  
   
   //drawPlayerScreen(board, false);
   ///drawPlayerScreen(serverBoard, true);
@@ -43,8 +43,25 @@ void draw() {
       text(sm.name,10,10);
   }
   
-  fill(255);
-  rect(width, 0, 10, height);
+  fill(200);
+  //border
+ // rect(width, 0, 10, height);
+  fill(50,50,140);
+  if(players.size() >= 2){
+   
+    text("players connected",width/2, height/2);
+   } else{
+      textSize(30);
+      text("waiting for players to connect\n            on port "+PORT, 100, height/2);
+      
+      textSize(20);
+      text(players.size()+ " connected", 250, 400);
+      int spacing = 40;
+      for(ShapeManager sm : players.values()){
+        text(sm.name+ " connected", 240, 400+spacing);
+        spacing += 40;
+      }
+    }
 }
 
 void gameStep() {
