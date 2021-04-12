@@ -1,7 +1,7 @@
 import processing.net.*; 
 import java.util.Map;
   
-  //protocol [messagetype, id, data]
+//protocol [messagetype, id, data]
 public static final int COLS = 10;
 public static final int ROWS = 20;
 HashMap<Byte, ShapeManager> players = new HashMap<Byte, ShapeManager>();

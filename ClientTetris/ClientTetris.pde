@@ -6,6 +6,7 @@ byte [][] board = new byte[COLS][ROWS];
 byte [][] serverBoard = new byte[COLS][ROWS];
 Client myClient; 
 String name ="";
+String defaulName = "BOB";
 String serverName = null;
 int level = 0;
 byte id = 0;
@@ -17,20 +18,32 @@ public static final byte CONTROL_MESSAGE = -95;
 public static final byte BOARD_UPDATE_MESSAGE = -97;
 public static final byte BROADCAST = -100;
 
-
+public static final String HOST = "localhost";
+public static final int PORT = 8080;
 void setup() {
   size(610, 600);
   width/=2;
-  myClient = new Client(this, "localhost", 8080);
+  myClient = new Client(this,  HOST, PORT);
 }
 
 void draw() {
+  
+  
   background(0);
   drawPlayerScreen(board, true);
   drawPlayerScreen(serverBoard, false);
   fill(255);
   rect(width, 0, Constants.GAP, height);
   textSize(30);
+  
+  if(!myClient.active()){
+     fill(200,150,200);
+     text("Is the server running on "+HOST+"?", 80,40); 
+     textSize(20);
+     text("Unable to connect to"+HOST+" on port "+ PORT, 100,100);
+     
+     
+  }
 }
 
 
@@ -67,8 +80,11 @@ void drawPlayerScreen(byte [][] b, boolean self) {
   }
   
   text(name, 20, 40);
-  if(serverName!=null)
-    text(serverName, width+ Constants.GAP+20, 40);
+  if(serverName != null){
+  text(serverName, width+ Constants.GAP+20, 40);
+  } else {
+      text("waiting...", width+ Constants.GAP+20, 40);
+  }
 }
 
 void keyPressed() {
@@ -94,7 +110,7 @@ void clientEvent(Client someClient) {
   byte [] data = someClient.readBytes();
   if (data[0] == NAME_MESSAGE) {
     if (this.id != data[1]) {
-      if(this.serverName == null){
+      if(this.serverName==null){
       this.serverName = new String(data).substring(2);
       byte[] nameMessage = ("  "+this.name).getBytes();
     nameMessage[0] = NAME_MESSAGE;
